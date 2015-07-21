@@ -58,8 +58,6 @@ public class CliTask extends Thread
     output = new ArrayList();
     try
     {
-      cmd = java.util.Arrays.asList("VBoxManage", "startvm \"DeineTuer\"");
-      //cmd = "/bin/bash -c \"" + cmd.replace("\"", "\\\"") + "\"";
       System.out.println(cmd);
       
       ProcessBuilder pb = new ProcessBuilder(cmd);
