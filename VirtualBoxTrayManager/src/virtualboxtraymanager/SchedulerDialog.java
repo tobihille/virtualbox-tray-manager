@@ -6,16 +6,21 @@
 
 package virtualboxtraymanager;
 
+import java.util.Properties;
+
 /**
  *
  * @author neo
  */
-public class Scheduler extends javax.swing.JFrame {
+public class SchedulerDialog extends javax.swing.JDialog {
 
+  public static Properties settings = null;
+  
   /**
-   * Creates new form Scheduler
+   * Creates new form SchedulerDialog
    */
-  public Scheduler() {
+  public SchedulerDialog(java.awt.Frame parent, boolean modal) {
+    super(parent, modal);
     initComponents();
   }
 
@@ -27,41 +32,17 @@ public class Scheduler extends javax.swing.JFrame {
   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
   private void initComponents() {
 
-    jMenuItem1 = new javax.swing.JMenuItem();
-    jMenuBar1 = new javax.swing.JMenuBar();
-    jMenu1 = new javax.swing.JMenu();
-    jMenu2 = new javax.swing.JMenu();
-    jMenu3 = new javax.swing.JMenu();
-
-    jMenuItem1.setText("jMenuItem1");
-
     setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-    setTitle("Scheduler");
-    setAlwaysOnTop(true);
-    setMaximumSize(new java.awt.Dimension(1280, 768));
-    setMinimumSize(new java.awt.Dimension(640, 100));
-    setPreferredSize(new java.awt.Dimension(600, 500));
-
-    jMenu1.setText("New Schedule");
-    jMenuBar1.add(jMenu1);
-
-    jMenu2.setText("Delete marked");
-    jMenuBar1.add(jMenu2);
-
-    jMenu3.setText("Edit marked");
-    jMenuBar1.add(jMenu3);
-
-    setJMenuBar(jMenuBar1);
 
     javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
     getContentPane().setLayout(layout);
     layout.setHorizontalGroup(
       layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addGap(0, 640, Short.MAX_VALUE)
+      .addGap(0, 400, Short.MAX_VALUE)
     );
     layout.setVerticalGroup(
       layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addGap(0, 479, Short.MAX_VALUE)
+      .addGap(0, 300, Short.MAX_VALUE)
     );
 
     pack();
@@ -84,29 +65,31 @@ public class Scheduler extends javax.swing.JFrame {
         }
       }
     } catch (ClassNotFoundException ex) {
-      java.util.logging.Logger.getLogger(Scheduler.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+      java.util.logging.Logger.getLogger(SchedulerDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
     } catch (InstantiationException ex) {
-      java.util.logging.Logger.getLogger(Scheduler.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+      java.util.logging.Logger.getLogger(SchedulerDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
     } catch (IllegalAccessException ex) {
-      java.util.logging.Logger.getLogger(Scheduler.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+      java.util.logging.Logger.getLogger(SchedulerDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
     } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-      java.util.logging.Logger.getLogger(Scheduler.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+      java.util.logging.Logger.getLogger(SchedulerDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
     }
         //</editor-fold>
 
-    /* Create and display the form */
+    /* Create and display the dialog */
     java.awt.EventQueue.invokeLater(new Runnable() {
       public void run() {
-        new Scheduler().setVisible(true);
+        SchedulerDialog dialog = new SchedulerDialog(new javax.swing.JFrame(), true);
+        dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+          @Override
+          public void windowClosing(java.awt.event.WindowEvent e) {
+            System.exit(0);
+          }
+        });
+        dialog.setVisible(true);
       }
     });
   }
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
-  private javax.swing.JMenu jMenu1;
-  private javax.swing.JMenu jMenu2;
-  private javax.swing.JMenu jMenu3;
-  private javax.swing.JMenuBar jMenuBar1;
-  private javax.swing.JMenuItem jMenuItem1;
   // End of variables declaration//GEN-END:variables
 }
