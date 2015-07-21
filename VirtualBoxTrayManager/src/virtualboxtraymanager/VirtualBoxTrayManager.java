@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.security.CodeSource;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -92,19 +93,25 @@ public class VirtualBoxTrayManager {
     JOptionPane.showMessageDialog(null, infoMessage, titleBar, JOptionPane.ERROR_MESSAGE);
   }
   
-  public static String startCommand(String VMName)
+  public static List<String> startCommand(String VMName)
   {
-    return "VBoxManage startvm \"" + VMName + "\" gui";
+    List<String> params = java.util.Arrays.asList("VBoxManage", "startvm \"" + VMName + "\"", "gui");
+    return params;
+    //return "VBoxManage startvm \"" + VMName + "\" gui";
   }
   
-  public static String shotdownCommand(String VMName)
+  public static List<String> shutdownCommand(String VMName)
   {
-    return "VBoxManage controlvm \"" + VMName + "\" acpipowerbutton";
+    List<String> params = java.util.Arrays.asList("VBoxManage", "controlvm \"" + VMName + "\"", "acpipowerbutton");
+    return params;
+    //return "VBoxManage controlvm \"" + VMName + "\" acpipowerbutton";
   }
   
-  public static String backupCommand(String VMName, String backupDir)
+  public static List<String> backupCommand(String VMName, String backupDir)
   {
-    return "VBoxManage export \"" + VMName + "\" -o ";
+    List<String> params = java.util.Arrays.asList("VBoxManage", "export \"" + VMName + "\"", "-o " + backupDir);
+    return params; 
+    //return "VBoxManage export \"" + VMName + "\" -o "+ backupDir;
   }
   
   private void readVMs()
@@ -217,8 +224,7 @@ public class VirtualBoxTrayManager {
             {
               String name = ((javax.swing.JMenu) ((JPopupMenu) ( (JMenuItem) e.getSource() ).getParent()).getInvoker()).getText();
               String uuid = vms.get(name);
-              CliTask vmShutdown = new CliTask("VBoxManage controlvm \"" + name + "\" acpipowerbutton",
-                uuid, name, "Error on shutdown of VM " + name);
+              CliTask vmShutdown = new CliTask(shutdownCommand(name), uuid, name, "Error on shutdown of VM " + name);
               vmShutdown.start();
             }
           }
@@ -239,8 +245,7 @@ public class VirtualBoxTrayManager {
                 errorBox("Error on backup of VM " + name + " - you need to set the backup-directory first", "Backup error");
               }
               
-              CliTask vmBackup = new CliTask("VBoxManage export \"" + name + "\" -o \"" + dir +"\"", uuid, 
-                name, "Error on backup of VM " + name);
+              CliTask vmBackup = new CliTask(backupCommand(name, dir), uuid, name, "Error on backup of VM " + name);
               vmBackup.start();
               infoBox("Backup successfully started, running ...", "Backup info");
             }

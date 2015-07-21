@@ -10,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.List;
 
 import static virtualboxtraymanager.VirtualBoxTrayManager.errorBox;
 
@@ -20,14 +21,14 @@ import static virtualboxtraymanager.VirtualBoxTrayManager.errorBox;
 public class CliTask extends Thread
 {
 
-  private String cmd = null;
+  private List<String> cmd = null;
   private String uuid = null;
   private String name = null;
   private String errorMessage = null;
   
   ArrayList<String> output = new ArrayList();
   
-  public CliTask(String cmd, String uuid, String name, String errorMessage)
+  public CliTask(List<String> cmd, String uuid, String name, String errorMessage)
   {
     if (cmd == null || cmd.isEmpty())
     {
@@ -47,6 +48,7 @@ public class CliTask extends Thread
     this.cmd = cmd;
     this.uuid = uuid;
     this.name = name;
+    this.errorMessage = errorMessage;
   }
   
   @Override
@@ -56,10 +58,14 @@ public class CliTask extends Thread
     output = new ArrayList();
     try
     {
-      cmd = "/bin/bash -c \"" + cmd.replace("\"", "\\\"") + "\"";
-      
+      cmd = java.util.Arrays.asList("VBoxManage", "startvm \"DeineTuer\"");
+      //cmd = "/bin/bash -c \"" + cmd.replace("\"", "\\\"") + "\"";
       System.out.println(cmd);
-      Process process = Runtime.getRuntime().exec(cmd);
+      
+      ProcessBuilder pb = new ProcessBuilder(cmd);
+      pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
+      Process process = pb.start();
+      /*
       BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
       String line;			
       
@@ -68,6 +74,7 @@ public class CliTask extends Thread
         System.out.println(line);
 				output.add(line);
 			}
+              */
     }
     catch (IOException ex)
     {
