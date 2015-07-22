@@ -1,7 +1,6 @@
 package virtualboxtraymanager;
 
 import java.awt.AWTException;
-import java.awt.Container;
 import java.awt.Image;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
@@ -9,7 +8,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -21,6 +19,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.security.CodeSource;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -32,10 +31,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
-/**
- *
- * @author neo
- */
 public class VirtualBoxTrayManager {
 
   public static VirtualBoxTrayManager appInstance = null;
@@ -45,9 +40,6 @@ public class VirtualBoxTrayManager {
   public static SystemTray tray = null;
   public static HashMap<String, String> vms = new HashMap();
   public static JPopupMenu popup = null;
-  
-  private static String currentUuid = null;
-  private static String currentName = null;
   
   public static Properties settings = new Properties();
   
@@ -95,21 +87,21 @@ public class VirtualBoxTrayManager {
   
   public static List<String> startCommand(String VMName)
   {
-    List<String> params = java.util.Arrays.asList("VBoxManage", "startvm \"" + VMName + "\"", "gui");
+    List<String> params = java.util.Arrays.asList("/usr/bin/VBoxManage", "startvm",  "\"" + VMName + "\"", "gui");
     return params;
     //return "VBoxManage startvm \"" + VMName + "\" gui";
   }
   
   public static List<String> shutdownCommand(String VMName)
   {
-    List<String> params = java.util.Arrays.asList("VBoxManage", "controlvm \"" + VMName + "\"", "acpipowerbutton");
+    List<String> params = java.util.Arrays.asList("VBoxManage", "controlvm", "\"" + VMName + "\"", "acpipowerbutton");
     return params;
     //return "VBoxManage controlvm \"" + VMName + "\" acpipowerbutton";
   }
   
   public static List<String> backupCommand(String VMName, String backupDir)
   {
-    List<String> params = java.util.Arrays.asList("VBoxManage", "export \"" + VMName + "\"", "-o " + backupDir);
+    List<String> params = java.util.Arrays.asList("VBoxManage", "export", "\"" + VMName + "\"", "-o", backupDir);
     return params; 
     //return "VBoxManage export \"" + VMName + "\" -o "+ backupDir;
   }
@@ -119,11 +111,21 @@ public class VirtualBoxTrayManager {
     //Here inside this thread because we need it JUST NOW and LOCKING
     try
     {
-      Process vmList = Runtime.getRuntime().exec("VBoxManage list vms");
-      BufferedReader reader = new BufferedReader(new InputStreamReader(vmList.getInputStream()));
-      String line;			
-			while ( (line = reader.readLine()) != null ) 
+      List<String> params = java.util.Arrays.asList("VBoxManage", "list", "vms");
+      CliTask vmList = new CliTask(params, "Error on listing VMs");
+      vmList.start();
+      
+      while ( vmList.isAlive() )
       {
+        Thread.sleep(25);
+      }
+      
+      ArrayList<String> buffer = vmList.output;
+      Iterator<String> it = buffer.iterator();
+			
+      while ( it.hasNext() ) 
+      {
+        String line = it.next();
 				int l = line.length();
         int nameEnd = l-39; //UUID of VM is { + 36 chars + } and preceeded by 1 space > equals 39
         String vmName = line.substring(0, nameEnd + 1);
@@ -131,9 +133,9 @@ public class VirtualBoxTrayManager {
         vms.put( vmName.replace("\"", "").trim(), vmUuid.trim() );
 			}
     }
-    catch (IOException e)
+    catch (InterruptedException ex) 
     {
-      errorBox("Error on listing VMs: " + e.getMessage(), "Startup-Error");
+      //does in reality not happen
     }
   }
   
@@ -167,7 +169,6 @@ public class VirtualBoxTrayManager {
 
       popup = new JPopupMenu();
 
-      //ti.setPopupMenu(popup);
       ti.addMouseListener(new MouseAdapter() //add the more fancy/less ugly swing-popup-menu -> see http://bugs.java.com/bugdatabase/view_bug.do?bug_id=6285881
         {
           @Override
@@ -209,8 +210,7 @@ public class VirtualBoxTrayManager {
             public void actionPerformed(ActionEvent e) 
             {
               String name = ((javax.swing.JMenu) ((JPopupMenu) ( (JMenuItem) e.getSource() ).getParent()).getInvoker()).getText();
-              String uuid = vms.get(name);
-              CliTask vmStart = new CliTask(startCommand(name), uuid, name, "Error on start of VM " + name );
+              CliTask vmStart = new CliTask(startCommand(name), "Error on start of VM " + name );
               vmStart.start();
             }
           }
@@ -223,8 +223,7 @@ public class VirtualBoxTrayManager {
             public void actionPerformed(ActionEvent e) 
             {
               String name = ((javax.swing.JMenu) ((JPopupMenu) ( (JMenuItem) e.getSource() ).getParent()).getInvoker()).getText();
-              String uuid = vms.get(name);
-              CliTask vmShutdown = new CliTask(shutdownCommand(name), uuid, name, "Error on shutdown of VM " + name);
+              CliTask vmShutdown = new CliTask(shutdownCommand(name), "Error on shutdown of VM " + name);
               vmShutdown.start();
             }
           }
@@ -237,15 +236,13 @@ public class VirtualBoxTrayManager {
             public void actionPerformed(ActionEvent e) 
             {
               String name = ((javax.swing.JMenu) ((JPopupMenu) ( (JMenuItem) e.getSource() ).getParent()).getInvoker()).getText();
-              String uuid = vms.get(name);
-              
               String dir = settings.getProperty("backupdir");
               if ( dir == null || dir.isEmpty()  )
               {
                 errorBox("Error on backup of VM " + name + " - you need to set the backup-directory first", "Backup error");
               }
               
-              CliTask vmBackup = new CliTask(backupCommand(name, dir), uuid, name, "Error on backup of VM " + name);
+              CliTask vmBackup = new CliTask(backupCommand(name, dir), "Error on backup of VM " + name);
               vmBackup.start();
               infoBox("Backup successfully started, running ...", "Backup info");
             }

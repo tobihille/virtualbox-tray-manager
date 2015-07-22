@@ -1,21 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package virtualboxtraymanager;
 
 import java.util.Properties;
 import javax.swing.JFileChooser;
 
-/**
- *
- * @author neo
- */
 public class SettingsDialog extends javax.swing.JDialog {
 
-  public static Properties settings = null;
+  public Properties settings = null;
   
   /**
    * Creates new form SettingsDialog
