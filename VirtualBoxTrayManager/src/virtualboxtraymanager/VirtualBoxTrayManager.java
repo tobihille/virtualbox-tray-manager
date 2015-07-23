@@ -43,14 +43,21 @@ public class VirtualBoxTrayManager {
   
   public static Properties settings = new Properties();
   
+  public CliTask xpcomInstance = null;
+  
   /**
    * @param args the command line arguments
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws InterruptedException 
+  {
     VirtualBoxTrayManager tm =  new VirtualBoxTrayManager();
     appInstance = tm;
-    appInstance.readVMs();
     appInstance.readConfig();
+
+    appInstance.startXpcom();
+    Thread.sleep(1500); //give some space to actually start service
+    appInstance.readVMs();
+    
     if ( SystemTray.isSupported() )
     {
       appInstance.initTray();
@@ -106,13 +113,42 @@ public class VirtualBoxTrayManager {
     //return "VBoxManage export \"" + VMName + "\" -o "+ backupDir;
   }
   
+  private void startXpcom()
+  {
+    if (settings.getProperty("xpcomfile") == null || settings.getProperty("xpcomfile").equals("") )
+    {
+      infoBox("Please provide executable for xpcomserver", "Configuration needed");
+      SettingsDialog sd = new SettingsDialog(null, true);
+      sd.settings = settings;
+      sd.setVisible(true);
+      settings = sd.settings;
+      writeConfig();
+      sd.dispose();
+    }
+    
+    if (settings.getProperty("librarypath") == null || settings.getProperty("librarypath").equals("") )
+    {
+      infoBox("Please provide library path", "Configuration needed");
+      SettingsDialog sd = new SettingsDialog(null, true);
+      sd.settings = settings;
+      sd.setVisible(true);
+      settings = sd.settings;
+      writeConfig();
+      sd.dispose();
+    }
+    
+    List<String> params = java.util.Arrays.asList(settings.getProperty("xpcomfile"));
+    xpcomInstance = new CliTask(params, "Error on listing VMs");
+    xpcomInstance.waitFor = false;
+    xpcomInstance.start();
+  }
+  
   private void readVMs()
   {
     //Here inside this thread because we need it JUST NOW and LOCKING
     try
     {
-      List<String> params = java.util.Arrays.asList("VBoxManage", "list", "vms");
-      CliTask vmList = new CliTask(params, "Error on listing VMs");
+      XpcomTask vmList = new XpcomTask("list", "Error listing VMs", settings);
       vmList.start();
       
       while ( vmList.isAlive() )
@@ -120,9 +156,9 @@ public class VirtualBoxTrayManager {
         Thread.sleep(25);
       }
       
-      ArrayList<String> buffer = vmList.output;
-      Iterator<String> it = buffer.iterator();
-			
+      ArrayList<String> output = vmList.output;
+      Iterator<String> it = output.iterator();
+      
       while ( it.hasNext() ) 
       {
         String line = it.next();
@@ -300,8 +336,16 @@ public class VirtualBoxTrayManager {
           @Override
           public void actionPerformed(ActionEvent e) 
           {
-            appInstance.writeConfig();
-            System.exit(0);
+            try {
+              xpcomInstance.close();
+              xpcomInstance.join(500);
+              appInstance.writeConfig();
+              System.exit(0);
+            } 
+            catch (InterruptedException ex) 
+            {
+              //another InterruptedException
+            }
           }
         }
       );
@@ -355,15 +399,4 @@ public class VirtualBoxTrayManager {
     } 
   }
   
-  public void close()
-  {
-    this.writeConfig();
-  }
-  
-  @Override
-  public void finalize() throws Throwable
-  {
-    this.close();
-    super.finalize();
-  }
 }

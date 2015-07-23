@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package virtualboxtraymanager;
 
 import java.io.BufferedReader;
@@ -19,6 +13,8 @@ public class CliTask extends Thread
 
   private List<String> cmd = null;
   private String errorMessage = null;
+  public boolean waitFor = true;
+  private Process runningInstance = null;
   
   ArrayList<String> output = new ArrayList();
   
@@ -44,11 +40,14 @@ public class CliTask extends Thread
       
       ProcessBuilder pb = new ProcessBuilder(cmd);
       //pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
-      Process process = pb.start();
+      runningInstance = pb.start();
       
-      process.waitFor();
+      if (waitFor)
+      {
+        runningInstance.waitFor();
+      }
       
-      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+      BufferedReader reader = new BufferedReader(new InputStreamReader(runningInstance.getInputStream()));
       String line;			
       
 			while ( (line = reader.readLine()) != null ) 
@@ -65,6 +64,11 @@ public class CliTask extends Thread
     {
       //does not effectively happen
     }
+  }
+  
+  public void close()
+  {
+    runningInstance.destroy();
   }
   
 }
