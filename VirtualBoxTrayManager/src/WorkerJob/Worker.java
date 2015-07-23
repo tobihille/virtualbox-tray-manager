@@ -24,35 +24,41 @@ public class Worker {
     
     if ( args[0].equals("list") )
     {
-      System.out.println(1);
-      VirtualBoxManager mgr = VirtualBoxManager.createInstance(null);
-      IVirtualBox vbox = mgr.getVBox();
-      System.out.println("VirtualBox version: " + vbox.getVersion() + "\n");
-      
-      // get first VM name
-      /*
-      
-      Mozilla m = Mozilla.getInstance();
-      System.out.println(2);
-      VirtualBoxManager vboxManager = VirtualBoxManager.createInstance(null);
-      System.out.println(3);
-      IVirtualBox vbox = vboxManager.getVBox();
-      System.out.println(4);
-      List<IMachine> boxes = vbox.getMachines();
-System.out.println(5);
-      
-      System.out.println( boxes.size() );
-      
-      Iterator<IMachine> it = boxes.iterator();
-      while ( it.hasNext() )
-      {
-        IMachine machine = it.next();
-        System.out.println( "\"" + machine.getName() + "\" " + "{" + machine.getId() + "}" );
-      }
-              */
+      Worker w = new Worker();
+      System.out.println( w.list() );
     }
 
     System.out.println("end");
+  }
+  
+  private String list()
+  {
+    String out = "";
+    System.out.println(1);
+    VirtualBoxManager mgr = VirtualBoxManager.createInstance(null);
+    IVirtualBox vbox = mgr.getVBox();
+    System.out.println("VirtualBox version: " + vbox.getVersion() + "\n");
+
+    /*
+    Mozilla m = Mozilla.getInstance();
+    System.out.println(2);
+    VirtualBoxManager vboxManager = VirtualBoxManager.createInstance(null);
+    System.out.println(3);
+    IVirtualBox vbox = vboxManager.getVBox();
+    System.out.println(4);
+    List<IMachine> boxes = vbox.getMachines();
+    System.out.println(5);
+    
+    System.out.println( boxes.size() );
+
+    Iterator<IMachine> it = boxes.iterator();
+    while ( it.hasNext() )
+    {
+      IMachine machine = it.next();
+      out += "\n" + "\"" + machine.getName() + "\" " + "{" + machine.getId() + "}" );
+    }
+    */
+    return out;
   }
   
 }

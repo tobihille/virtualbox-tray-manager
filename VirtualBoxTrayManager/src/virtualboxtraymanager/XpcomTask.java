@@ -34,14 +34,16 @@ public class XpcomTask extends Thread
     {
       throw new IllegalArgumentException("settings cannnot be emtpy");
     }
-    /*
+    
     String classpath = ManagementFactory.getRuntimeMXBean().getClassPath();
+    /*
     if ( classpath.contains(PS) )
     {
       classpath = classpath.substring(classpath.indexOf(PS) + 1);
     }
     */
-    this.cmd = java.util.Arrays.asList("java", /*"-cp", classpath, */"WorkerJob.Worker", cmd);
+    
+    this.cmd = java.util.Arrays.asList("java", "-cp", classpath, "-Dvbox-home", settings.getProperty("vboxhome"), "WorkerJob.Worker", cmd);
     this.settings = settings;
     this.errorMessage = errorMessage;
   }
@@ -56,23 +58,7 @@ public class XpcomTask extends Thread
       System.out.println(cmd);
       
       ProcessBuilder pb = new ProcessBuilder(cmd);
-      Map<String, String> env = pb.environment();
-      env.put("vbox.home", settings.getProperty("vboxhome") );
       
-      String libraryPath = settings.getProperty("librarypath");
-      
-      File f = new File(libraryPath);
-      
-      File[] libs = f.listFiles( new FileNameFilter("jar") );
-      String cpsep = System.getProperty("classpath.separator");
-      String cp = System.getProperty("java.class.path");
-      
-      for (File lib : libs) 
-      {
-        cp = cp + cpsep + lib.getAbsolutePath();
-      }
-      env.put("java.class.path", cp);
-
       Process process = pb.start();
       process.waitFor();
       
@@ -84,6 +70,15 @@ public class XpcomTask extends Thread
         System.out.println(line);
 				output.add(line);
 			}
+      
+      reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+
+      while ( (line = reader.readLine()) != null ) 
+      {
+        System.err.println(line);
+				output.add(line);
+			}
+
     }
     catch (IOException ex)
     {
