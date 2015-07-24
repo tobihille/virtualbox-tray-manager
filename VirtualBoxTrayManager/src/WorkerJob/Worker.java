@@ -95,6 +95,7 @@ public class Worker {
   private void launch(String identifier) throws InterruptedException, Exception
   {
     String status = "";
+    boolean skiprest = false;
     
     VirtualBoxManager mgr = VirtualBoxManager.createInstance(null);
     try
@@ -104,6 +105,8 @@ public class Worker {
       IMachine machine = vbox.findMachine(identifier);
       ISession session = mgr.getSessionObject();
 
+      System.out.println("Current VM state: " + machine.getState());
+      
       try
       {
         if ( !machine.getState().equals(MachineState.Running) )
@@ -115,6 +118,11 @@ public class Worker {
              System.out.println("Machine failed to start: " + p.getErrorInfo().getText());
           }
         }
+        else
+        {
+          System.out.println("Machine already running");
+          skiprest = true;
+        }
       }
       catch (Exception e)
       {
@@ -122,18 +130,21 @@ public class Worker {
       }
       finally
       {
-        if ( session.getMachine().getState().equals(MachineState.Running) )
+        if (!skiprest)
         {
-          status = "running";
-        }
-        else
-        {
-          status = "not running";
-        }
-        
-        if ( session.getState().equals(SessionState.Locked) )
-        {
-          session.unlockMachine();
+          if ( session.getMachine().getState().equals(MachineState.Running) )
+          {
+            status = "running";
+          }
+          else
+          {
+            status = "not running";
+          }
+
+          if ( session.getState().equals(SessionState.Locked) )
+          {
+            session.unlockMachine();
+          }
         }
       }
     }
@@ -146,13 +157,14 @@ public class Worker {
       mgr.cleanup();
     }
     
-    System.out.println("Machine start finished, status: " + status);
+    if (!skiprest)
+    {
+      System.out.println("Machine acpi powerdown finished, status: " + status);
+    }
   }
 
   private void shutdown(String identifier)
   {
-    String status = "";
-    
     VirtualBoxManager mgr = VirtualBoxManager.createInstance(null);
     try
     {
@@ -160,6 +172,8 @@ public class Worker {
 
       IMachine machine = vbox.findMachine(identifier);
       ISession session = mgr.getSessionObject();
+      
+      System.out.println("Current VM state: " + machine.getState());
       
       try
       {
@@ -177,15 +191,6 @@ public class Worker {
       }
       finally
       {
-        if ( session.getMachine().getState().equals(MachineState.Running) )
-        {
-          status = "running";
-        }
-        else
-        {
-          status = "not running";
-        }
-        
         if ( session.getState().equals(SessionState.Locked) )
         {
           session.unlockMachine();
@@ -220,7 +225,7 @@ public class Worker {
       IMachine machine = vbox.findMachine(identifier);
       ISession session = mgr.getSessionObject();
 
-      exportPath = exportPath + System.getProperty("directory.separator") + machine.getName() + ".ova";
+      exportPath = exportPath + System.getProperty("file.separator") + machine.getName() + ".ova";
       
       try
       {
@@ -228,16 +233,29 @@ public class Worker {
         {
           machine.lockMachine(session, LockType.Shared);
           
+          File f = new File(exportPath);
+          if (f.exists() && f.isFile())
+          {
+            File backup = new File(f.getAbsolutePath() + "_old");
+            if (backup.exists() && backup.isFile())
+            {
+              backup.delete();
+            }
+            f.renameTo(backup);
+          }
+          
           IAppliance ia = vbox.createAppliance();
           machine.exportTo(ia, exportPath);
           IProgress prog = ia.write("ovf-1.0", null, exportPath);
           
           System.out.println("Backup running, saving into " + exportPath);
           
+          int seconds = 0;
           while ( !prog.getCompleted() && !prog.getCompleted() )
           {
             Thread.sleep(10000);
-            System.out.println( prog.getPercent() );
+            System.out.println( "Progress after " + seconds*10 + "s: " + prog.getPercent() +"%");
+            seconds++;
           }
           //prog.waitForCompletion(-1);
           if (prog.getResultCode() != 0) 
@@ -245,6 +263,10 @@ public class Worker {
              System.out.println("Machine failed to backup: " + prog.getErrorInfo().getText());
           }
           
+        }
+        else
+        {
+          System.out.println("Can not safely create a backup, VM is in state " + machine.getState());
         }
       }
       catch (Exception e)

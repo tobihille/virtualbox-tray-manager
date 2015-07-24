@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -13,13 +14,11 @@ import static virtualboxtraymanager.VirtualBoxTrayManager.errorBox;
 public class XpcomTask extends Thread
 {
 
-  private List<String> cmd = null;
+  private ArrayList<String> cmd = null;
   private String errorMessage = null;
-//  private Properties settings = null;
-  
-  private final static String PS = System.getProperty("path.separator");
   
   ArrayList<String> output = new ArrayList();
+  public String identifier = null;
   
   public XpcomTask(String cmd, String errorMessage, Properties settings)
   {
@@ -34,21 +33,26 @@ public class XpcomTask extends Thread
     }
     
     String classpath = ManagementFactory.getRuntimeMXBean().getClassPath();
-    /*
-    if ( classpath.contains(PS) )
-    {
-      classpath = classpath.substring(classpath.indexOf(PS) + 1);
-    }
-    */
     
-    this.cmd = java.util.Arrays.asList("java", "-cp", classpath, "-Dvbox-home", settings.getProperty("vboxhome"), "WorkerJob.Worker", cmd);
-//    this.settings = settings;
+    this.cmd = new ArrayList();
+    this.cmd.add("java");
+    this.cmd.add("-cp");
+    this.cmd.add(classpath);
+    this.cmd.add("-Dvbox.home=" + settings.getProperty("vboxhome"));
+    this.cmd.add("WorkerJob.Worker");
+    this.cmd.add(cmd);
+    
     this.errorMessage = errorMessage;
   }
   
   @Override
   public void run() {
     //super.run();
+
+    if (identifier != null)
+    {
+      cmd.add(identifier);
+    }
     
     output = new ArrayList();
     try

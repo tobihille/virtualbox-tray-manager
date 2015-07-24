@@ -247,8 +247,10 @@ public class VirtualBoxTrayManager {
             public void actionPerformed(ActionEvent e) 
             {
               String name = ((javax.swing.JMenu) ((JPopupMenu) ( (JMenuItem) e.getSource() ).getParent()).getInvoker()).getText();
-              CliTask vmStart = new CliTask(startCommand(name), "Error on start of VM " + name );
+              XpcomTask vmStart = new XpcomTask("start", "Error starting VM " + name, settings);
+              vmStart.identifier = name;
               vmStart.start();
+              infoBox("VM Started, please note that all VMs are started in headless mode.\nIf you want to acces them you need to open the VirtualBox GUI and make them visible.", "VM Started, Information");
             }
           }
         );
@@ -260,8 +262,9 @@ public class VirtualBoxTrayManager {
             public void actionPerformed(ActionEvent e) 
             {
               String name = ((javax.swing.JMenu) ((JPopupMenu) ( (JMenuItem) e.getSource() ).getParent()).getInvoker()).getText();
-              CliTask vmShutdown = new CliTask(shutdownCommand(name), "Error on shutdown of VM " + name);
-              vmShutdown.start();
+              XpcomTask vmEnd = new XpcomTask("stop", "Error  on shutdown of VM " + name, settings);
+              vmEnd.identifier = name;
+              vmEnd.start();
             }
           }
         );
@@ -278,8 +281,9 @@ public class VirtualBoxTrayManager {
               {
                 errorBox("Error on backup of VM " + name + " - you need to set the backup-directory first", "Backup error");
               }
-              
-              CliTask vmBackup = new CliTask(backupCommand(name, dir), "Error on backup of VM " + name);
+
+              XpcomTask vmBackup = new XpcomTask("backup", "Error  on shutdown of VM " + name, settings);
+              vmBackup.identifier = name;
               vmBackup.start();
               infoBox("Backup successfully started, running ...", "Backup info");
             }
