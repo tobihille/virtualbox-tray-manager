@@ -1,5 +1,6 @@
 package virtualboxtraymanager;
 
+import com.sun.nio.zipfs.ZipPath;
 import java.awt.AWTException;
 import java.awt.Image;
 import java.awt.SystemTray;
@@ -8,16 +9,20 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -183,23 +188,23 @@ public class VirtualBoxTrayManager {
       //get current code-path
       CodeSource src = VirtualBoxTrayManager.class.getProtectionDomain().getCodeSource();
       URL jar = src.getLocation();
-      Path trayIconFile;
-
+      Path trayIconFilePath;
+      java.io.File trayIconFile;
+      Image trayIconImage;
+      
       if (jar.toString().endsWith(".jar"))
       {
-        //access jar and read tray-icon
-        FileSystem zipfs = FileSystems.newFileSystem(jar.toURI(), null, null);
-        trayIconFile = zipfs.getPath("/resources/gnome-mdi.png"); 
+        trayIconImage = ImageIO.read( this.getClass().getResourceAsStream("/gnome-mdi.png") );        
       }
       else
       {
         //debug-process -> read file from filesystem
-        trayIconFile = new java.io.File(jar.toString().replace("file:", "") + "gnome-mdi.png").toPath();
+        trayIconFilePath = new java.io.File(jar.toString().replace("file:", "") + "gnome-mdi.png").toPath();
+        trayIconFile = trayIconFilePath.toFile();
+        trayIconImage = ImageIO.read( trayIconFile );
       }
       //access tray and add icon
       tray = SystemTray.getSystemTray();
-      java.io.File f = trayIconFile.toFile();
-      Image trayIconImage = ImageIO.read( f );
       TrayIcon ti = new TrayIcon(trayIconImage);
       ti.setImageAutoSize(true);
       ti.setToolTip("VirtualBox Tray Manager");
@@ -358,7 +363,7 @@ public class VirtualBoxTrayManager {
 
       tray.add(ti);
     }      
-    catch (URISyntaxException | IOException | AWTException e)
+    catch (/* URISyntaxException | */ IOException | AWTException e)
     {
       System.out.println(e.getMessage());
       System.out.println("Class: " + e.getClass().getCanonicalName());
