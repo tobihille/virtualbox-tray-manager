@@ -21,3 +21,7 @@ To claryfy things:
 * VirtualBox install directory refers to your Install directory, on Linux usually /usr/lib/virtualbox
 * Library Path refers to the applications directory, the directory you placed the .jar-Files in
 * Backup save directory is the directory where your VMs are exported to if you choose backup. Please be sure you have write permissions and enough diskspace available.
+
+# Problems
+
+If you get exceptions on startup or during control of vms regarding vboxjxpcom missing in java.library.path you need to install the official package of VirtualBox, I had this issue when installing the package from openSuse because they omitted some files for unkown reasons. Uninstall and install from Oracle fixed it for me.
