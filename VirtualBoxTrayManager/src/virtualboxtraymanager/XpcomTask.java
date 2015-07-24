@@ -1,13 +1,11 @@
 package virtualboxtraymanager;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import static virtualboxtraymanager.VirtualBoxTrayManager.errorBox;
@@ -17,7 +15,7 @@ public class XpcomTask extends Thread
 
   private List<String> cmd = null;
   private String errorMessage = null;
-  private Properties settings = null;
+//  private Properties settings = null;
   
   private final static String PS = System.getProperty("path.separator");
   
@@ -44,7 +42,7 @@ public class XpcomTask extends Thread
     */
     
     this.cmd = java.util.Arrays.asList("java", "-cp", classpath, "-Dvbox-home", settings.getProperty("vboxhome"), "WorkerJob.Worker", cmd);
-    this.settings = settings;
+//    this.settings = settings;
     this.errorMessage = errorMessage;
   }
   
