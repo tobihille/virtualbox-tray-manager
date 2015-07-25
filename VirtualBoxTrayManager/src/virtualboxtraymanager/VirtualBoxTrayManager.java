@@ -173,6 +173,10 @@ public class VirtualBoxTrayManager {
     while (ip.hasNext())
     {
       String[] result = ip.next().split("\\$\\$"); //beware of regex
+      if (result.length != 2)
+      {
+        break;
+      }
       String machineName = result[0];
       String IPs = result[1].replace("|", " ");
       
@@ -204,7 +208,6 @@ public class VirtualBoxTrayManager {
         }
       }
     }
-    
   }
   
   private void startXpcom()
