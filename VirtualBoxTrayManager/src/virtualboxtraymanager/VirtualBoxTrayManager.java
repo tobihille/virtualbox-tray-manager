@@ -1,6 +1,6 @@
 package virtualboxtraymanager;
 
-import com.sun.nio.zipfs.ZipPath;
+import it.sauronsoftware.cron4j.Scheduler;
 import java.awt.AWTException;
 import java.awt.Image;
 import java.awt.SystemTray;
@@ -9,20 +9,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.FileStore;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,10 +28,13 @@ import javax.imageio.ImageIO;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import static virtualboxtraymanager.SchedulerDialog.mtm;
 
 public class VirtualBoxTrayManager {
 
   public static VirtualBoxTrayManager appInstance = null;
+  
+  public static Scheduler cronScheduler = null;
   
   public static final java.io.File propertiesFile = new java.io.File(System.getProperty("user.home") + "/virtual-box-manager.properties");
   
@@ -72,7 +68,15 @@ public class VirtualBoxTrayManager {
     {
       errorBox("Cannot create a tray-entry, will run in Window-Mode", "Startup-Error");
       SchedulerDialog sched = new SchedulerDialog(null, false);
+      sched.standaloneMode = true;
       sched.setVisible(true);
+    }
+    
+    appInstance.initCron();
+    
+    if (cronScheduler != null)
+    {
+      cronScheduler.start();
     }
     
     while (true) //let application not end
@@ -98,25 +102,39 @@ public class VirtualBoxTrayManager {
     JOptionPane.showMessageDialog(null, infoMessage, titleBar, JOptionPane.ERROR_MESSAGE);
   }
   
-  public static List<String> startCommand(String VMName)
+  public void initCron()
   {
-    List<String> params = java.util.Arrays.asList("/usr/bin/VBoxManage", "startvm",  "\"" + VMName + "\"", "gui");
-    return params;
-    //return "VBoxManage startvm \"" + VMName + "\" gui";
-  }
-  
-  public static List<String> shutdownCommand(String VMName)
-  {
-    List<String> params = java.util.Arrays.asList("VBoxManage", "controlvm", "\"" + VMName + "\"", "acpipowerbutton");
-    return params;
-    //return "VBoxManage controlvm \"" + VMName + "\" acpipowerbutton";
-  }
-  
-  public static List<String> backupCommand(String VMName, String backupDir)
-  {
-    List<String> params = java.util.Arrays.asList("VBoxManage", "export", "\"" + VMName + "\"", "-o", backupDir);
-    return params; 
-    //return "VBoxManage export \"" + VMName + "\" -o "+ backupDir;
+    boolean loadError = false;
+    // Creates a Scheduler instance.
+		cronScheduler = new Scheduler();
+    
+    java.util.Set<Object> settingSet = settings.keySet();
+    Iterator<Object> it = settingSet.iterator();
+    
+    while (it.hasNext())
+    {
+      String key = (String) it.next();
+      if ( key.startsWith("cron") )
+      {
+        String[] expression = settings.getProperty(key).split(" ");
+        
+        if (expression.length != 7)
+        {
+          loadError = true;
+          break;
+        }
+        
+        String cronTimer = expression[0] + " " + expression[1] + " " + expression[2] + " " + expression[3] + " " + expression[4];
+        
+        VmTask t = new VmTask(expression[5], expression[6]);
+        cronScheduler.schedule(cronTimer, t);
+      }
+    }
+    
+    if (loadError)
+    {
+      errorBox("Error loading cron expression, some crons might not run; Check scheduler settings.", "Startup - Error");
+    }
   }
   
   private void startXpcom()
@@ -392,7 +410,7 @@ public class VirtualBoxTrayManager {
     }
   }
   
-  public void writeConfig()
+  public static void writeConfig()
   {
     try
     {
