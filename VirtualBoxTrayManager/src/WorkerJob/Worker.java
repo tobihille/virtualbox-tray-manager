@@ -215,7 +215,7 @@ public class Worker {
     
     if (!skiprest)
     {
-      System.out.println("Machine acpi powerdown finished, status: " + status);
+      System.out.println("Machine start finished, status: " + status);
     }
   }
 
