@@ -5,8 +5,10 @@ Create an easy-to-use manager for all already existing VirtualBox VMs residing i
 #Requirements
 
 VirtualBox >= 5.0 (I assume the api is backwards compatible)
+
 vboxjxpcom.jar - you get it inside the VirtualBox SDK
 * Download it from https://www.virtualbox.org/wiki/Downloads, unzip the file and copy it from sdk/bindings/xpcom/java/ to the applications jar directory
+
 cron4j.jar - you get it from http://www.sauronsoftware.it/projects/cron4j/
 * unzip it and copy the cron4j.jar to the applications jar directory
 
