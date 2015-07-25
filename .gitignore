@@ -13,3 +13,6 @@ hs_err_pid*
 /VirtualBoxTrayManager/nbproject/private/
 /VirtualBoxTrayManager/build/
 /VirtualBoxTrayManager/dist/
+
+#Cron4j
+cron4j*

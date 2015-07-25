@@ -28,7 +28,6 @@ import javax.imageio.ImageIO;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
-import static virtualboxtraymanager.SchedulerDialog.mtm;
 
 public class VirtualBoxTrayManager {
 
@@ -72,12 +71,7 @@ public class VirtualBoxTrayManager {
       sched.setVisible(true);
     }
     
-    appInstance.initCron();
-    
-    if (cronScheduler != null)
-    {
-      cronScheduler.start();
-    }
+    initCron();
     
     while (true) //let application not end
     {
@@ -102,8 +96,13 @@ public class VirtualBoxTrayManager {
     JOptionPane.showMessageDialog(null, infoMessage, titleBar, JOptionPane.ERROR_MESSAGE);
   }
   
-  public void initCron()
+  public static void initCron()
   {
+    if (cronScheduler != null && cronScheduler.isStarted())
+    {
+      cronScheduler.stop();
+    }
+    
     boolean loadError = false;
     // Creates a Scheduler instance.
 		cronScheduler = new Scheduler();
@@ -134,6 +133,11 @@ public class VirtualBoxTrayManager {
     if (loadError)
     {
       errorBox("Error loading cron expression, some crons might not run; Check scheduler settings.", "Startup - Error");
+    }
+    
+    if ( !cronScheduler.isStarted() )
+    {
+      cronScheduler.start();
     }
   }
   

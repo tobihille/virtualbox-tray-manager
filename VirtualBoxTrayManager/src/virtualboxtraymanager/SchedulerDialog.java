@@ -279,6 +279,7 @@ public class SchedulerDialog extends javax.swing.JDialog {
     if (!saveError)
     {
       VirtualBoxTrayManager.writeConfig();
+      VirtualBoxTrayManager.initCron();
       
       if (evt != null)
       {
