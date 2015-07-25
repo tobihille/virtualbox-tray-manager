@@ -4,6 +4,8 @@ Create an easy-to-use manager for all already existing VirtualBox VMs residing i
 
 #Requirements
 
+Java >= 7 (1.7)
+
 VirtualBox >= 5.0 (I assume the api is backwards compatible)
 
 vboxjxpcom.jar - you get it inside the VirtualBox SDK
