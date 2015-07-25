@@ -2,9 +2,13 @@ package virtualboxtraymanager;
 
 import it.sauronsoftware.cron4j.Scheduler;
 import java.awt.AWTException;
+import java.awt.Component;
 import java.awt.Image;
 import java.awt.SystemTray;
+import java.awt.Toolkit;
 import java.awt.TrayIcon;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -72,12 +76,24 @@ public class VirtualBoxTrayManager {
     }
     
     initCron();
+
+    refreshIPs();
+    
+    long sleeped = 0;
+    long sleepConst = 25;
     
     while (true) //let application not end
     {
       try
       {
-        Thread.sleep(25);
+        Thread.sleep(sleepConst);
+        sleeped += sleepConst;
+        
+        if (sleeped > 60000)
+        {
+          refreshIPs();
+          sleeped = 0;
+        }
       }
       catch (InterruptedException e)
       {
@@ -139,6 +155,56 @@ public class VirtualBoxTrayManager {
     {
       cronScheduler.start();
     }
+  }
+  
+  public static void refreshIPs() throws InterruptedException
+  {
+    XpcomTask refresh = new XpcomTask("listIPs", "Error on retrieving IPs", settings);
+    refresh.start();
+    
+    while ( refresh.isAlive() )
+    {
+      Thread.sleep(50);
+    }
+    
+    ArrayList<String> ips = refresh.output;
+    Iterator<String> ip = ips.iterator();
+    
+    while (ip.hasNext())
+    {
+      String[] result = ip.next().split("\\$\\$"); //beware of regex
+      String machineName = result[0];
+      String IPs = result[1].replace("|", " ");
+      
+      for (int i = 0; i < popup.getComponentCount(); i++)
+      {
+        Component menu = popup.getComponent(i);
+        if (menu instanceof javax.swing.JMenu && ((javax.swing.JMenu) menu).getText().equals(machineName))
+        {
+          if ( ((javax.swing.JMenu) menu).getMenuComponentCount() < 4 ) //we didn't had an IP up to now
+          {
+            JMenuItem mi = new JMenuItem(IPs);
+            mi.setToolTipText("Copy IP(s) to clipboard.");
+            mi.addActionListener(new ActionListener()
+              {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                  Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+                  StringSelection stringSelection = new StringSelection( ((JMenuItem) e.getSource()).getText() );
+                  clpbrd.setContents(stringSelection, null);
+                }
+              }
+            );
+            ((javax.swing.JMenu) menu).add(mi);
+          }
+          else
+          {
+            ( (JMenuItem) ((javax.swing.JMenu) menu).getMenuComponent(3) ).setText(IPs);
+          }
+        }
+      }
+    }
+    
   }
   
   private void startXpcom()
@@ -268,6 +334,7 @@ public class VirtualBoxTrayManager {
         javax.swing.JMenu itemActionContainer = new javax.swing.JMenu(name);
 
         JMenuItem start = new JMenuItem("Start");
+        start.setToolTipText("launch VM");
         start.addActionListener(new ActionListener() 
           {
             @Override
@@ -283,6 +350,7 @@ public class VirtualBoxTrayManager {
         );
         
         JMenuItem shutdown = new JMenuItem("Shutdown");
+        shutdown.setToolTipText("stop VM via ACPI");
         shutdown.addActionListener(new ActionListener() 
           {
             @Override
@@ -297,6 +365,7 @@ public class VirtualBoxTrayManager {
         );
 
         JMenuItem backup = new JMenuItem("Backup");
+        backup.setToolTipText("Export VM to OVA file to configured path");
         backup.addActionListener(new ActionListener() 
           {
             @Override

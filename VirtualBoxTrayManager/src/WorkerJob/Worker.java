@@ -9,8 +9,10 @@ import java.util.Properties;
 import org.virtualbox_5_0.IAppliance;
 import org.virtualbox_5_0.IConsole;
 import org.virtualbox_5_0.IMachine;
+import org.virtualbox_5_0.INetworkAdapter;
 import org.virtualbox_5_0.IProgress;
 import org.virtualbox_5_0.ISession;
+import org.virtualbox_5_0.ISystemProperties;
 import org.virtualbox_5_0.IVirtualBox;
 import org.virtualbox_5_0.LockType;
 import org.virtualbox_5_0.MachineState;
@@ -26,7 +28,7 @@ public class Worker {
   public static void main(String[] args) throws Exception {
     if (args.length < 1)
     {
-      System.out.println("No argument given, quitting... Allowed arguments: {list|start|stop|backup}");
+      System.out.println("No argument given, quitting... Allowed arguments: {list|start|stop|backup|listIPs}");
       System.exit(0);
     }
     
@@ -72,6 +74,11 @@ public class Worker {
       w.backup(args[1]);
     }
 
+    if (args[0].equals("listIPs"))
+    {
+      Worker w = new Worker();
+      System.out.println( w.listIps() );
+    }
   }
   
   private String list()
@@ -79,6 +86,8 @@ public class Worker {
     String out = "";
     VirtualBoxManager mgr = VirtualBoxManager.createInstance(null);
     IVirtualBox vbox = mgr.getVBox();
+
+    ISystemProperties sp = vbox.getSystemProperties();
     
     List<IMachine> boxes = vbox.getMachines();
     
@@ -92,6 +101,53 @@ public class Worker {
     return out.trim();
   }
 
+  private String listIps()
+  {
+    String v4Adresses = "";
+    
+    VirtualBoxManager mgr = VirtualBoxManager.createInstance(null);
+    IVirtualBox vbox = mgr.getVBox();
+
+    ISystemProperties sp = vbox.getSystemProperties();
+    
+    List<IMachine> boxes = vbox.getMachines();
+    
+    Iterator<IMachine> it = boxes.iterator();
+    while ( it.hasNext() )
+    {
+      IMachine machine = it.next();
+      String machineIPs = "";
+      
+      if (machine.getState().equals(MachineState.Running))
+      {
+        for (long l = 0L; l < sp.getMaxNetworkAdapters(machine.getChipsetType()); l++)
+        {
+          INetworkAdapter nw = machine.getNetworkAdapter(l);
+          if ( nw != null && nw.getEnabled() && nw.getCableConnected() )
+          {
+            machineIPs += machine.getGuestPropertyValue( "/VirtualBox/GuestInfo/Net/" + l + "/V4/IP") + "|";
+          }
+        }
+      }
+      
+      if (machineIPs.length() > 0)
+      {
+        machineIPs = machineIPs.substring(0, machineIPs.length() - 1); //trim last "|"
+      }
+      
+      if (machineIPs.length() > 0)
+      {
+        v4Adresses += machine.getName() + "$$" + machineIPs + "\n";
+      }
+    }
+    
+    if (v4Adresses.length() > 0)
+    {
+      v4Adresses = v4Adresses.substring(0, v4Adresses.length() - 1); //trim last "\n"
+    }
+    return v4Adresses;
+  }
+  
   private void launch(String identifier) throws InterruptedException, Exception
   {
     String status = "";
