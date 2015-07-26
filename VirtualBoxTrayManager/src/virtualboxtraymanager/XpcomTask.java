@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 
 import static virtualboxtraymanager.VirtualBoxTrayManager.errorBox;
@@ -19,6 +17,7 @@ public class XpcomTask extends Thread
   
   ArrayList<String> output = new ArrayList();
   public String identifier = null;
+  public String modifier = null;
   
   public XpcomTask(String cmd, String errorMessage, Properties settings)
   {
@@ -52,6 +51,11 @@ public class XpcomTask extends Thread
     if (identifier != null)
     {
       cmd.add(identifier);
+    }
+    
+    if (modifier != null)
+    {
+      cmd.add(modifier);
     }
     
     output = new ArrayList();

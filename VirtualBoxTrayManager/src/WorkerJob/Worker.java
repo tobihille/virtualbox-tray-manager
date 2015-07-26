@@ -19,10 +19,6 @@ import org.virtualbox_5_0.MachineState;
 import org.virtualbox_5_0.SessionState;
 import org.virtualbox_5_0.VirtualBoxManager;
 
-/**
- *
- * @author neo
- */
 public class Worker {
   
   public static void main(String[] args) throws Exception {
@@ -46,8 +42,20 @@ public class Worker {
         System.exit(0);
       }
 
+      String displayMode = ""; //empty string counts as "start in default visibility-mode"
+      if (args.length > 2)
+      {
+        displayMode = args[2];
+      }
+      
+      if ( displayMode.equals("default") )
+      {
+        displayMode = "";
+      }
+      
       Worker w = new Worker();
-      w.launch(args[1]);
+      
+      w.launch(args[1], displayMode);
     }
 
     if ( args[0].equals("stop") )
@@ -148,7 +156,7 @@ public class Worker {
     return v4Adresses;
   }
   
-  private void launch(String identifier) throws InterruptedException, Exception
+  private void launch(String identifier, String displayMode) throws InterruptedException, Exception
   {
     String status = "";
     boolean skiprest = false;
@@ -167,7 +175,7 @@ public class Worker {
       {
         if ( !machine.getState().equals(MachineState.Running) )
         {
-          IProgress p = machine.launchVMProcess(session, "headless", null);
+          IProgress p = machine.launchVMProcess(session, displayMode, null);
           p.waitForCompletion(-1);
           if (p.getResultCode() != 0) 
           {
@@ -348,7 +356,3 @@ public class Worker {
     System.out.println("Backup complete");
   }
 }
-
-//LESSONS
-// Use VM Package from Oracle, at least Version 5.0
-//

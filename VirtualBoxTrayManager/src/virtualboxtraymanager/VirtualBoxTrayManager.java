@@ -38,6 +38,8 @@ public class VirtualBoxTrayManager {
   public static VirtualBoxTrayManager appInstance = null;
   
   public static Scheduler cronScheduler = null;
+
+  //public static Logger logger = Logger.getLogger("vmlogger");
   
   public static final java.io.File propertiesFile = new java.io.File(System.getProperty("user.home") + "/virtual-box-manager.properties");
   
@@ -57,6 +59,9 @@ public class VirtualBoxTrayManager {
   {
     VirtualBoxTrayManager tm =  new VirtualBoxTrayManager();
     appInstance = tm;
+    
+    //logger.
+    
     appInstance.readConfig();
 
     appInstance.startXpcom();
@@ -346,8 +351,12 @@ public class VirtualBoxTrayManager {
               String name = ((javax.swing.JMenu) ((JPopupMenu) ( (JMenuItem) e.getSource() ).getParent()).getInvoker()).getText();
               XpcomTask vmStart = new XpcomTask("start", "Error starting VM " + name, settings);
               vmStart.identifier = name;
+              vmStart.modifier = settings.getProperty("startmode", "default");
               vmStart.start();
-              infoBox("VM Started, please note that all VMs are started in headless mode.\nIf you want to acces them you need to open the VirtualBox GUI and make them visible.", "VM Started, Information");
+              if (vmStart.modifier.equals("headless"))
+              {
+                infoBox("VM Started, please note that you have configured that all VMs are started in headless mode.", "VM Started, Information");
+              }
             }
           }
         );
