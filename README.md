@@ -22,7 +22,7 @@ run "java -cp vboxjxpcom.jar:cron4j.jar:VirtualBoxTrayManager.jar virtualboxtray
 # Setup
 
 On first Startup you will be asked to enter all Settings, if they are not provided the application will not run correctly.
-To claryfy things:
+To clarify things:
 * Xpcom Service Executable refers on Linux to /usr/lib/virtualbox/VBoxSVC
 * VirtualBox install directory refers to your Install directory, on Linux usually /usr/lib/virtualbox
 * Library Path refers to the applications directory, the directory you placed the .jar-Files in
